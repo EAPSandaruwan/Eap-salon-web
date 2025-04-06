@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EAP Salon | Premium Beauty Experience</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.4/ScrollTrigger.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            salon: {
+              primary: '#FF4D8D',
+              secondary: '#FFD0E0',
+              accent: '#FFF0F5',
+              dark: '#4A0018',
+              light: '#FFF9FB'
+            }
+          },
+          fontFamily: {
+            'playfair': ['Playfair Display', 'serif'],
+            'montserrat': ['Montserrat', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    .font-playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    
+    .font-montserrat {
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    .canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(90deg, #FF4D8D 0%, #FF85A1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .service-card {
+      transition: all 0.4s ease;
+    }
+    
+    .service-card:hover {
+      transform: translateY(-10px);
+    }
+    
+    .cursor-follow {
+      pointer-events: none;
+      position: fixed;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: difference;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body class="bg-salon-light text-gray-800 font-montserrat overflow-x-hidden">
+  <!-- Custom Cursor -->
+  <div id="cursor" class="cursor-follow hidden md:block bg-salon-primary w-6 h-6 opacity-70"></div>
+  
+  <!-- Loading Screen -->
+  <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+    <div class="text-center">
+      <div class="text-salon-primary text-4xl font-playfair mb-4">EAP Salon</div>
+      <div class="loading-bar w-64 h-1 bg-gray-200 rounded-full overflow-hidden">
+        <div class="h-full bg-salon-primary w-0 rounded-full transition-all duration-1000" id="progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header with Glass Morphism -->
+  <header class="backdrop-blur-md bg-white/70 text-salon-dark py-4 px-8 sticky top-0 z-40 shadow-sm transition-all duration-300" id="main-header">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+      <div class="flex items-center mb-4 md:mb-0">
+        <div class="w-12 h-12 rounded-full bg-salon-primary text-white flex items-center justify-center mr-3">
+          <span class="font-playfair text-xl">EAP</span>
+        </div>
+        <h1 class="text-3xl font-bold font-playfair tracking-tight">EAP <span class="text-salon-primary">Salon</span></h1>
+      </div>
+      
+      <!-- Mobile Menu Toggle -->
+      <button id="mobile-menu-button" class="md:hidden text-salon-dark focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path>
+        </svg>
+      </button>
+      
+      <!-- Desktop Navigation -->
+      <nav class="hidden md:flex space-x-8 items-center">
+        <a href="#home" class="nav-link relative hover:text-salon-primary transition-colors py-2 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-salon-primary after:transition-all">Home</a>
+        <a href="#services" class="nav-link relative hover:text-salon-primary transition-colors py-2 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-salon-primary after:transition-all">Services</a>
+        <a href="#about" class="nav-link relative hover:text-salon-primary transition-colors py-2 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-salon-primary after:transition-all">About</a>
+        <a href="#gallery" class="nav-link relative hover:text-salon-primary transition-colors py-2 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-salon-primary after:transition-all">Gallery</a>
+        <a href="#testimonials" class="nav-link relative hover:text-salon-primary transition-colors py-2 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-salon-primary after:transition-all">Testimonials</a>
+        <a href="#team" class="nav-link relative hover:text-salon-primary transition-colors py-2 after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 hover:after:w-full after:bg-salon-primary after:transition-all">Our Team</a>
+        <a href="#contact" class="bg-salon-primary text-white px-6 py-2 rounded-full hover:bg-opacity-90 transition shadow-md hover:shadow-lg">Book Now</a>
+      </nav>
+      
+      <!-- Mobile Navigation -->
+      <nav id="mobile-menu" class="hidden fixed inset-0 bg-white z-50 flex flex-col items-center justify-center space-y-6 text-xl">
+        <button id="close-menu" class="absolute top-6 right-6 text-salon-dark">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        <a href="#home" class="hover:text-salon-primary transition-colors mobile-nav-link">Home</a>
+        <a href="#services" class="hover:text-salon-primary transition-colors mobile-nav-link">Services</a>
+        <a href="#about" class="hover:text-salon-primary transition-colors mobile-nav-link">About</a>
+        <a href="#gallery" class="hover:text-salon-primary transition-colors mobile-nav-link">Gallery</a>
+        <a href="#testimonials" class="hover:text-salon-primary transition-colors mobile-nav-link">Testimonials</a>
+        <a href="#team" class="hover:text-salon-primary transition-colors mobile-nav-link">Our Team</a>
+        <a href="#contact" class="bg-salon-primary text-white px-8 py-3 rounded-full hover:bg-opacity-90 transition">Book Now</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Section with Three.js Background -->
+  <section id="home" class="relative min-h-screen flex items-center overflow-hidden">
+    <div id="hero-canvas" class="canvas-container"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
+    <div class="container mx-auto px-6 py-24 z-10">
+      <div class="max-w-2xl">
+        <h2 class="text-5xl md:text-7xl font-bold font-playfair mb-6 text-white leading-tight">
+          Elevate Your <span class="text-salon-secondary">Beauty</span> Experience
+        </h2>
+        <p class="text-xl text-white/90 mb-12 max-w-lg">
+          Where luxury meets artistry. Experience transformation at EAP Salon, your premium beauty destination.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a href="#services" class="bg-salon-primary text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-opacity-90 transition shadow-lg hover:shadow-xl text-center">Discover Services</a>
+          <a href="#contact" class="bg-transparent border-2 border-white text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-white hover:text-salon-primary transition shadow-lg hover:shadow-xl text-center">Book Appointment</a>
+        </div>
+        <div class="mt-16 flex items-center space-x-8">
+          <div class="flex -space-x-4">
+            <div class="w-12 h-12 rounded-full border-2 border-white bg-salon-secondary flex items-center justify-center">
+              <span class="font-semibold text-xs">250+</span>
+            </div>
+            <div class="w-12 h-12 rounded-full border-2 border-white bg-salon-secondary flex items-center justify-center">
+              <span class="font-semibold text-xs">100%</span>
+            </div>
+            <div class="w-12 h-12 rounded-full border-2 border-white bg-salon-secondary flex items-center justify-center">
+              <span class="font-semibold text-xs">10+</span>
+            </div>
+          </div>
+          <div class="text-white/90">
+            <p class="font-semibold">Trusted by 250+ clients with 100% satisfaction</p>
+            <p class="text-sm">10+ years of excellence</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Interactive Services Section -->
+  <section id="services" class="py-24 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="text-center mb-16">
+        <span class="inline-block px-4 py-1 bg-salon-secondary text-salon-primary rounded-full text-sm font-medium mb-4">Our Premium Services</span>
+        <h2 class="text-4xl md:text-5xl font-bold font-playfair mb-6">Experience Beauty & Elegance</h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">Our comprehensive range of premium services is designed to pamper, rejuvenate, and transform you into the most confident version of yourself.</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Service Card 1 -->
+        <div class="service-card group bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl border border-gray-100">
+          <div class="w-16 h-16 bg-salon-secondary rounded-2xl flex items-center justify-center mb-6 text-salon-primary group-hover:bg-salon-primary group-hover:text-white transition-all">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold mb-4 font-playfair">Hair Styling</h3>
+          <p class="text-gray-600 mb-6">Transform your look with cuts, coloring, highlights, extensions, and styling tailored to your unique features and preferences.</p>
+          <ul class="mb-6 space-y-2 text-gray-600">
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Premium Cuts & Styling
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Color & Highlights
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Extensions & Treatments
+            </li>
+          </ul>
+          <div class="pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500">Starting from</span>
+            <p class="text-2xl font-semibold text-salon-dark">$45</p>
+          </div>
+        </div>
+        
+        <!-- Service Card 2 -->
+        <div class="service-card group bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl border border-gray-100">
+          <div class="w-16 h-16 bg-salon-secondary rounded-2xl flex items-center justify-center mb-6 text-salon-primary group-hover:bg-salon-primary group-hover:text-white transition-all">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold mb-4 font-playfair">Facials & Skincare</h3>
+          <p class="text-gray-600 mb-6">Revitalize your skin with our rejuvenating facials and advanced skincare treatments customized for your skin type.</p>
+          <ul class="mb-6 space-y-2 text-gray-600">
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Deep Cleansing Facial
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Anti-Aging Treatments
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Hydrating Masks
+            </li>
+          </ul>
+          <div class="pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500">Starting from</span>
+            <p class="text-2xl font-semibold text-salon-dark">$60</p>
+          </div>
+        </div>
+        
+        <!-- Service Card 3 -->
+        <div class="service-card group bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl border border-gray-100">
+          <div class="w-16 h-16 bg-salon-secondary rounded-2xl flex items-center justify-center mb-6 text-salon-primary group-hover:bg-salon-primary group-hover:text-white transition-all">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold mb-4 font-playfair">Bridal Packages</h3>
+          <p class="text-gray-600 mb-6">Comprehensive bridal beauty services to make your special day truly memorable and picture-perfect.</p>
+          <ul class="mb-6 space-y-2 text-gray-600">
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Bridal Trial Session
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Day-of Hair & Makeup
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Bridal Party Packages
+            </li>
+          </ul>
+          <div class="pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500">Starting from</span>
+            <p class="text-2xl font-semibold text-salon-dark">$250</p>
+          </div>
+        </div>
+        
+        <!-- Service Card 4 -->
+        <div class="service-card group bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl border border-gray-100">
+          <div class="w-16 h-16 bg-salon-secondary rounded-2xl flex items-center justify-center mb-6 text-salon-primary group-hover:bg-salon-primary group-hover:text-white transition-all">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold mb-4 font-playfair">Nail Care</h3>
+          <p class="text-gray-600 mb-6">Expert manicures and pedicures with premium products for healthy, beautiful nails that make a statement.</p>
+          <ul class="mb-6 space-y-2 text-gray-600">
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Signature Manicure
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Luxury Pedicure
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Gel & Nail Art
+            </li>
+          </ul>
+          <div class="pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500">Starting from</span>
+            <p class="text-2xl font-semibold text-salon-dark">$35</p>
+          </div>
+        </div>
+        
+        <!-- Service Card 5 -->
+        <div class="service-card group bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl border border-gray-100">
+          <div class="w-16 h-16 bg-salon-secondary rounded-2xl flex items-center justify-center mb-6 text-salon-primary group-hover:bg-salon-primary group-hover:text-white transition-all">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold mb-4 font-playfair">Makeup Artistry</h3>
+          <p class="text-gray-600 mb-6">Professional makeup application for any occasion, from natural day looks to glamorous evening styles.</p>
+          <ul class="mb-6 space-y-2 text-gray-600">
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Day & Evening Looks
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Special Events
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Makeup Lessons
+            </li>
+          </ul>
+          <div class="pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500">Starting from</span>
+            <p class="text-2xl font-semibold text-salon-dark">$55</p>
+          </div>
+        </div>
+        
+        <!-- Service Card 6 -->
+        <div class="service-card group bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl border border-gray-100">
+          <div class="w-16 h-16 bg-salon-secondary rounded-2xl flex items-center justify-center mb-6 text-salon-primary group-hover:bg-salon-primary group-hover:text-white transition-all">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold mb-4 font-playfair">Body Treatments</h3>
+          <p class="text-gray-600 mb-6">Luxurious body treatments that nourish, detoxify, and relax for total body wellness and rejuvenation.</p>
+          <ul class="mb-6 space-y-2 text-gray-600">
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Full Body Massage
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Body Scrubs & Wraps
+            </li>
+            <li class="flex items-center">
+              <svg class="w-5 h-5 text-salon-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              Aromatherapy
+            </li>
+          </ul>
+          <div class="pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-500">Starting from</span>
+            <p class="text-2xl font-semibold text-salon-dark">$80</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-16 text-center">
+        <a href="#" class="group inline-flex items-center text-salon-primary font-medium hover:text-salon-dark transition-colors">
+          <span>View Full Service Menu</span>
+          <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section with P5.js Background -->
+  <section id="about" class="py-24 bg-gradient-to-b from-white to-salon-accent relative overflow-hidden">
+    <div id="about-particles" class="absolute inset-0 pointer-events-none"></div>
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div<div class="lg:pr-12">
+            <span class="inline-block px-4 py-1 bg-salon-secondary text-salon-primary rounded-full text-sm font-medium mb-4">About EAP Salon</span>
+            <h2 class="text-4xl md:text-5xl font-bold font-playfair mb-6">Redefining Beauty Since 2015</h2>
+            <p class="text-gray-600 mb-6">At EAP Salon, we blend tradition with modern beauty techniques to deliver exceptional results tailored to your unique style and personality. With over a decade of experience, our team of skilled professionals is dedicated to making you feel confident and beautiful.</p>
+            
+            <div class="space-y-4 mb-8">
+              <div class="flex items-start">
+                <div class="w-12 h-12 rounded-full bg-salon-secondary flex items-center justify-center mr-4 mt-1 flex-shrink-0">
+                  <svg class="w-6 h-6 text-salon-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-1">Professional Expertise</h3>
+                  <p class="text-gray-600">Our team consists of certified professionals who stay current with the latest techniques and trends in the beauty industry.</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start">
+                <div class="w-12 h-12 rounded-full bg-salon-secondary flex items-center justify-center mr-4 mt-1 flex-shrink-0">
+                  <svg class="w-6 h-6 text-salon-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-1">Premium Products</h3>
+                  <p class="text-gray-600">We use only high-quality, cruelty-free products that nourish and protect while delivering stunning results.</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start">
+                <div class="w-12 h-12 rounded-full bg-salon-secondary flex items-center justify-center mr-4 mt-1 flex-shrink-0">
+                  <svg class="w-6 h-6 text-salon-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-1">Personalized Approach</h3>
+                  <p class="text-gray-600">Every client receives a tailored experience based on their unique features, preferences, and lifestyle.</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-4">
+              <a href="#team" class="bg-salon-primary text-white px-8 py-3 rounded-full text-lg font-medium hover:bg-opacity-90 transition shadow-md hover:shadow-lg text-center">Meet Our Team</a>
+              <a href="#contact" class="bg-transparent border-2 border-salon-primary text-salon-primary px-8 py-3 rounded-full text-lg font-medium hover:bg-salon-primary hover:text-white transition shadow-md hover:shadow-lg text-center">Contact Us</a>
+            </div>
+          </div>
+          
+          <div class="relative">
+            <div class="aspect-square bg-salon-secondary rounded-full mx-auto relative">
+              <!-- Placeholder for an image -->
+              <div class="absolute inset-0 flex items-center justify-center text-salon-primary text-xl font-medium">
+                Salon Interior Image
+              </div>
+            </div>
+            
+            <div class="absolute -bottom-6 -right-6 bg-white rounded-lg p-6 shadow-xl">
+              <div class="flex items-center space-x-4">
+                <div class="text-right">
+                  <p class="text-4xl font-bold text-salon-primary">10+</p>
+                  <p class="text-gray-600 text-sm">Years of Excellence</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="absolute -top-6 -left-6 bg-white rounded-lg p-6 shadow-xl">
+              <div class="flex items-center space-x-4">
+                <div class="text-right">
+                  <p class="text-4xl font-bold text-salon-primary">5000+</p>
+                  <p class="text-gray-600 text-sm">Happy Clients</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  
+    <!-- Gallery Section with Interactive Elements -->
+    <section id="gallery" class="py-24 bg-white">
+      <div class="container mx-auto px-6">
+        <div class="text-center mb-16">
+          <span class="inline-block px-4 py-1 bg-salon-secondary text-salon-primary rounded-full text-sm font-medium mb-4">Our Gallery</span>
+          <h2 class="text-4xl md:text-5xl font-bold font-playfair mb-6">Beauty Transformations</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">Explore our portfolio of stunning transformations and get inspired for your next visit.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Gallery Item 1 -->
+          <div class="gallery-item relative group overflow-hidden rounded-xl shadow-lg">
+            <div class="aspect-square bg-gradient-to-br from-salon-primary to-salon-secondary flex items-center justify-center">
+              <span class="text-white text-xl">Hair Style Image</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="text-center p-6 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                <h3 class="text-xl font-bold text-white mb-2">Elegant Updo</h3>
+                <p class="text-white/80 mb-4">Bridal hair styling for a summer wedding</p>
+                <button class="px-4 py-2 bg-salon-primary text-white rounded-full text-sm">View Details</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Gallery Item 2 -->
+          <div class="gallery-item relative group overflow-hidden rounded-xl shadow-lg">
+            <div class="aspect-square bg-gradient-to-br from-salon-primary to-salon-secondary flex items-center justify-center">
+              <span class="text-white text-xl">Makeup Image</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="text-center p-6 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                <h3 class="text-xl font-bold text-white mb-2">Glam Makeup</h3>
+                <p class="text-white/80 mb-4">Evening event makeup with dramatic eyes</p>
+                <button class="px-4 py-2 bg-salon-primary text-white rounded-full text-sm">View Details</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Gallery Item 3 -->
+          <div class="gallery-item relative group overflow-hidden rounded-xl shadow-lg">
+            <div class="aspect-square bg-gradient-to-br from-salon-primary to-salon-secondary flex items-center justify-center">
+              <span class="text-white text-xl">Skincare Image</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="text-center p-6 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                <h3 class="text-xl font-bold text-white mb-2">Facial Treatment</h3>
+                <p class="text-white/80 mb-4">Hydrating facial for radiant skin</p>
+                <button class="px-4 py-2 bg-salon-primary text-white rounded-full text-sm">View Details</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Gallery Item 4 -->
+          <div class="gallery-item relative group overflow-hidden rounded-xl shadow-lg">
+            <div class="aspect-square bg-gradient-to-br from-salon-primary to-salon-secondary flex items-center justify-center">
+              <span class="text-white text-xl">Nail Art Image</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="text-center p-6 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                <h3 class="text-xl font-bold text-white mb-2">Artistic Nails</h3>
+                <p class="text-white/80 mb-4">Custom nail design with gemstones</p>
+                <button class="px-4 py-2 bg-salon-primary text-white rounded-full text-sm">View Details</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Gallery Item 5 -->
+          <div class="gallery-item relative group overflow-hidden rounded-xl shadow-lg">
+            <div class="aspect-square bg-gradient-to-br from-salon-primary to-salon-secondary flex items-center justify-center">
+              <span class="text-white text-xl">Color Treatment Image</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="text-center p-6 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                <h3 class="text-xl font-bold text-white mb-2">Balayage Highlights</h3>
+                <p class="text-white/80 mb-4">Natural-looking color transition</p>
+                <button class="px-4 py-2 bg-salon-primary text-white rounded-full text-sm">View Details</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Gallery Item 6 -->
+          <div class="gallery-item relative group overflow-hidden rounded-xl shadow-lg">
+            <div class="aspect-square bg-gradient-to-br from-salon-primary to-salon-secondary flex items-center justify-center">
+              <span class="text-white text-xl">Bridal Image</span>
+            </div>
+            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div class="text-center p-6 transform translate-y-4 group-hover:translate-y-0 transition-transform">
+                <h3 class="text-xl font-bold text-white mb-2">Bridal Package</h3>
+                <p class="text-white/80 mb-4">Complete bridal transformation</p>
+                <button class="px-4 py-2 bg-salon-primary text-white rounded-full text-sm">View Details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-12 text-center">
+          <a href="#" class="group inline-flex items-center text-salon-primary font-medium hover:text-salon-dark transition-colors">
+            <span>View Full Gallery</span>
+            <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  
+    <!-- Interactive Testimonials Section -->
+    <section id="testimonials" class="py-24 bg-salon-accent relative overflow-hidden">
+      <div class="absolute top-0 left-0 w-64 h-64 bg-salon-secondary rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+      <div class="absolute bottom-0 right-0 w-96 h-96 bg-salon-secondary rounded-full opacity-20 translate-x-1/2 translate-y-1/2"></div>
+      
+      <div class="container mx-auto px-6 relative z-10">
+        <div class="text-center mb-16">
+          <span class="inline-block px-4 py-1 bg-salon-secondary text-salon-primary rounded-full text-sm font-medium mb-4">Testimonials</span>
+          <h2 class="text-4xl md:text-5xl font-bold font-playfair mb-6">What Our Clients Say</h2>
+          <p class="text-gray-600 max-w-2xl mx-auto">Hear from our satisfied clients who have experienced the EAP Salon difference.</p>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+          <!-- Testimonial Slider Controls -->
+          <div class="flex justify-between items-center mb-8">
+            <div class="flex space-x-2">
+              <button id="testimonial-prev" class="w-12 h-12 rounded-full border-2 border-salon-primary text-salon-primary hover:bg-salon-primary hover:text-white transition flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+              </button>
+              <button id="testimonial-next" class="w-12 h-12 rounded-full border-2 border-salon-primary text-salon-primary hover:bg-salon-primary hover:text-white transition flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+            </div>
+            <div class="testimonial-dots flex space-x-2">
+              <button class="w-3 h-3 rounded-full bg-salon-primary opacity-100"></button>
+              <button class="w-3 h-3 rounded-full bg-salon-primary opacity-50"></button>
+              <button class="w-3 h-3 rounded-full bg-salon-primary opacity-50"></button>
+            </div>
+          </div>
+          
+          <!-- Testimonial Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="bg-white p-8 rounded-2xl shadow-lg relative">
+              <div class="absolute -top-5 left-8 w-10 h-10 rounded-full bg-salon-primary text-white flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path>
+                </svg>
+              </div>
+              <div class="mb-6 pt-4">
+                <div class="flex text-yellow-400 mb-2">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                </div>
+                <p class="text-gray-600 italic">"Absolutely loved my makeover! The staff was so friendly and talented. My hair has never looked better, and the makeup was perfect for my event. Highly recommend!"</p>
+              </div>
+              <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-salon-secondary mr-4 flex items-center justify-center text-salon-primary font-bold">
+                  K
+                </div>
+                <div>
+                  <h4 class="font-semibold">Kavindi</h4>
+                  <p class="text-gray-500 text-sm">Regular Client • Hair & Makeup</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Testimonial 2 -->
+            <div class="bg-white p-8 rounded-2xl shadow-lg relative">
+              <div class="absolute -top-5 left-8 w-10 h-10 rounded-full bg-salon-primary text-white flex items-center justify-center">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11"></path>
+                </svg>
+              </div>
+              <div class="mb-6 pt-4">
+                <div class="flex text-yellow-400 mb-2">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                  </svg>
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.
